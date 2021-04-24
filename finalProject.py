@@ -64,7 +64,7 @@ def getAllTweetsOnDay(twitter_api, query, date):
 
                 #Add the tweet data to the dictionary which will get pickled. Can change for what metadata we want
                 #the below attributes being stored is the bare min that we will need
-                tweetData = [tweet['user']['screen_name'], tweet['created_at'], tweet['text'], tweet['id']]
+                tweetData = [tweet['user']['screen_name'], tweet['created_at'], tweet['text'], tweet['id'],tweet['retweet_count']]
                 tweetDict[tweetVolume] = tweetData
                 tweetVolume = tweetVolume + 1
 
@@ -111,7 +111,7 @@ if __name__ == "__main__":
 
     #Used for reading the data, just change date and hour
     #I plan on developing a better system for reading the tweet data later on so we can spot check data
-    #readTweetsFromStorage('storage/2021-04-20_Dogecoin/2021-04-20_23_Dogecoin_tweets.p')
+#    readTweetsFromStorage('storage/2021-04-20_Dogecoin/2021-04-20_23_Dogecoin_tweets.p')
 
 
 

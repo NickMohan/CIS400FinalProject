@@ -10,6 +10,8 @@ Also what needs to be done is to either put your twitter api keys into the helpe
 or you need to create a config.py file and copy in the text from below and put your keys in there.
 The config file is hidden in the .gitignore so no twitter api keys will be made public.
 
+Also you need to create a folder called storage in the root directory of the project. This is where
+the tweet data will be stored
 
 ### config.py file outline
 apiKey = 'KEY HERE'
