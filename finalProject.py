@@ -10,7 +10,7 @@ from dateutil.parser import parse
 import os
 
 #Returns tweets for the day before the date entered
-def getAllTweetsOnDay(twitter_api, query, date):
+def getAllTweetsOnDay(twitter_api, query, date, startID=None):
     tweetDict = {}
 
     #Only want to get tweets for current day
@@ -29,8 +29,10 @@ def getAllTweetsOnDay(twitter_api, query, date):
     currentHour = 0
 
     #Get the intial response from the twitter API
-    response = make_twitter_request(twitter_api.search.tweets, q=query, result_type='recent', count='100', until=date)
-
+    if(startID == None):
+        response = make_twitter_request(twitter_api.search.tweets, q=query, result_type='recent', count='100', until=date)
+    else:
+        response = make_twitter_request(twitter_api.search.tweets, q=query, result_type='recent', count='100', until=date, max_id = startID)
 
     #If the response is not empty set the current hour we start scraping at and
     #make the folder to store this days data in for the specific query we are using
@@ -59,7 +61,10 @@ def getAllTweetsOnDay(twitter_api, query, date):
                     with open(fileName, 'wb') as f:
                         pickle.dump(tweetDict, f, protocol=pickle.HIGHEST_PROTOCOL)
                     tweetDict = {}
+                    tweetVolume = 0
+                    retweetVolume = 0
                     currentHour = tweetDate.hour
+                    print(str(currentHour),"STARTING ID: ", str(tweet['id']))
 
 
                 #Add the tweet data to the dictionary which will get pickled. Can change for what metadata we want
@@ -83,11 +88,6 @@ def getAllTweetsOnDay(twitter_api, query, date):
     with open(fileName, 'wb') as f:
         pickle.dump(tweetDict, f, protocol=pickle.HIGHEST_PROTOCOL)
 
-    #Print out the total tweet volume as well as the retweet volume just so we can see it
-    print(tweetVolume)
-    print(retweetVolume)
-
-
 #Quick function for reading data from a pickle file will make this more
 #robust and user friendly in the future
 def readTweetsFromStorage(fileName):
@@ -106,8 +106,10 @@ if __name__ == "__main__":
 
     #Right now just scrapping data for one day, will modify this to get the rest of the data as needed
     q = "Dogecoin"
-    date = "2021-04-20"
-    getAllTweetsOnDay(twitter_api, q, date)
+    date = "2021-04-21"
+    #sID = '1384522239056355336'
+    sID = '1384507140312731654'
+    getAllTweetsOnDay(twitter_api, q, date, startID=sID)
 
     #Used for reading the data, just change date and hour
     #I plan on developing a better system for reading the tweet data later on so we can spot check data
