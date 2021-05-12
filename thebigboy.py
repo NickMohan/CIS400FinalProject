@@ -76,6 +76,7 @@ def makeTokenFeatureSet():
     token_features = [w for (w, c) in tdist.most_common(2000)]
     return token_features
 
+# some helpful stuff we need to load in for tokenization
 stop_words = set(stopwords.words('english')) 
 nlp = spacy.load("en_core_web_sm")
 
@@ -110,8 +111,9 @@ def tokenFeaturesHour(day,hour):
             filtered_tokens.append(token)
     document = nlp(' '.join(filtered_tokens))
 
-    text_no_namedentities = []
+    
     # remove named entities
+    text_no_namedentities = []
     ents = [e.text for e in document.ents]
     for item in document:
         if item.text in ents:
@@ -148,7 +150,7 @@ def prepHour(day,hour):
     # vFeat - category of previous hour's volume [high = > 1k, medium = > 500, low = >0]
     pcFeat = "C3"
     vFeat = "low"
-    chFeat = "C3"
+    chCategory = "C3"
     dayEntries = newbtc.loc[(newbtc['day'] == day)].reset_index()
     chChange = dayEntries.at[int(hour), 'change']
     if (hour == "0"):
@@ -161,6 +163,7 @@ def prepHour(day,hour):
     print(prevChange)
     print(prevVol)
 
+    ## CATEGORIZE PREVIOUS HOUR CHANGE ##
     if(prevChange > 1):
         pcFeat = "C1"
     elif(prevChange > .5):
@@ -170,15 +173,19 @@ def prepHour(day,hour):
     elif(prevChange < -1):
         pcFeat = "C5"
 
+    ## CATEGORIZE CURRENT HOUR CHANGE ##
+    # used for training purposes
+    # NOT a feature used in the trainingset
     if(chChange > 1):
-        chFeat = "C1"
+        chCategory = "C1"
     elif(chChange > .5):
-        chFeat = "C2"
+        chCategory = "C2"
     elif(chChange < -.5):
-        chFeat = "C4"
+        chCategory = "C4"
     elif(chChange < -1):
-        chFeat = "C5"
+        chCategory = "C5"
 
+    ## CATEGORIZE VOLUME LEVEL ##
     if(vFeat > 1000):
         vFeat = "high"
     elif(vFeat > 500):
@@ -208,7 +215,7 @@ def prepHour(day,hour):
         features = compileTweetTokenFeats(text, features)
 
         # add fully compiled feature set for tweet to day's accumulator
-        compiled_hour.extend((features,chFeat))
+        compiled_hour.extend((features,chCategory))
     print('Done.')
 
 # compile token-based features for the given tweet t, and 
@@ -248,13 +255,15 @@ def compileTweetTokenFeats(t, features):
     
     return features
 
-# gather the 
+# gather the token-based features for the given tweet
+# token-based features are based on the result of our makeTokenSet() function
 def document_features(tweet, features): # tweet is list of tokens
     document_words = set(tweet)
     for word in tFeats:
         features['contains(%s)' % word] = (word in document_words)
     return features    
 
+# prepare and return the training set for TRAINING_DATE
 def prepDay():
     day_compiled = []
     print('BEGINNING CREATION OF TRAINING SET FOR ' + TRAINING_DATE + '\n')
