@@ -1,7 +1,3 @@
-# C:\Users\nbfen\Downloads\dataset_2021-05-02\storage\2021-04-22_Bitcoin
-
-#CIS400 - Social Media and Data Mining Final Project
-
 import twitter
 from helperFuncs import *
 import json
@@ -11,7 +7,7 @@ from datetime import datetime
 from dateutil.parser import parse
 import os
 import pandas as pd
-from nltk.corpus import stopwords 
+from nltk.corpus import stopwords, words
 from nltk import *
 #nltk.download('stopwords')
 from nltk.classify import NaiveBayesClassifier as bayes
@@ -19,6 +15,8 @@ import nltk.classify as classy
 import string
 import spacy
 from random import sample
+from autocorrect import Speller
+import emoji
 #import en_core_web_sm
 #nlp = en_core_web_sm.load()
 
@@ -29,12 +27,13 @@ TRAINING_DATE = "2021-04-27"
 # WHEREVER YOUR PRICE DATA .CSVs ARE
 CURRENCY_PATH = ""
 # WHEREVER YOUR TWEET DATA IS
-TWEET_PATH = "C:\\Users\\nbfen\\Downloads\\dataset_2021-05-02\\storage\\"
+TWEET_PATH = "C:\\Users\\nick\\Downloads\\dataset_2021-05-02\\storage\\"
 # SHORT VERSION OF CURRENCY (btc, eth, doge)
 CURR_SHORT = "btc"
 # NAME OF CURRENCY (Bitcoin, Ethereum, Dogecoin)
 CURRENCY = 'Bitcoin'
 
+spell = Speller(fast=True)
 
 ## CLASSES ##
 # C1 - > 1%
@@ -79,7 +78,7 @@ def makeTokenFeatureSet():
     return token_features
 
 # some helpful stuff we need to load in for tokenization
-stop_words = set(stopwords.words('english')) 
+stop_words = set(stopwords.words('english'))
 nlp = spacy.load("en_core_web_sm")
 
 # tokenizes the set day and hour and returns a list of all the tokens
@@ -98,9 +97,9 @@ def tokenFeaturesHour(day,hour):
         #print(tw[i][2])
         # grabs tweet text
         daystweets.append(tw[i][2])
-        
+
     tokens = []
-    
+
     # tokenize tweets
     for t in daystweets:
         tt = TweetTokenizer(t)
@@ -108,12 +107,17 @@ def tokenFeaturesHour(day,hour):
 
     # remove stopwords and punctuation
     filtered_tokens = []
-    for token in tokens:
-        if token.lower() not in stop_words and token.lower() not in string.punctuation:
-            filtered_tokens.append(token)
+    temp_tokens = []
+    word = set(words.words())
+
+    for token in temp_tokens:
+        if len(token) >2:
+            if token.lower() in word or token in emoji.UNICODE_EMOJI_ENGLISH or token.startswith('@') or token.startswith('#'):
+                filtered_tokens.append(token)
+            elif (spell(token)) in word:
+                filtered_tokens.append(spell(token))
     document = nlp(' '.join(filtered_tokens))
 
-    
     # remove named entities
     text_no_namedentities = []
     ents = [e.text for e in document.ents]
@@ -214,7 +218,7 @@ def prepHour(day,hour):
             rtFeat = "high"
         elif(rts > 10):
             rtFeat = "medium"
-        
+
         features['rts'] = rtFeat
 
         # parse additional token-based features
@@ -225,7 +229,7 @@ def prepHour(day,hour):
     print('Done.')
     return compiled_hour
 
-# compile token-based features for the given tweet t, and 
+# compile token-based features for the given tweet t, and
 # add it to the current feature set (features)
 tFeats = makeTokenFeatureSet()
 def compileTweetTokenFeats(t, features):
@@ -234,9 +238,15 @@ def compileTweetTokenFeats(t, features):
 
     # remove stopwords and punctuation
     filtered_tokens = []
-    for token in tokens:
-        if token.lower() not in stop_words and token.lower() not in string.punctuation:
-            filtered_tokens.append(token)
+    temp_tokens = []
+    word = set(words.words())
+
+    for token in temp_tokens:
+        if len(token) >2:
+            if token.lower() in word or token in emoji.UNICODE_EMOJI_ENGLISH or token.startswith('@') or token.startswith('#'):
+                filtered_tokens.append(token)
+            elif (spell(token)) in word:
+                filtered_tokens.append(spell(token))
     document = nlp(' '.join(filtered_tokens))
     text_no_namedentities = []
 
@@ -258,7 +268,7 @@ def compileTweetTokenFeats(t, features):
     # contains repeated emoji
     # influencer tagged
     # special influencer tagged (like elon)
-    
+
     return features
 
 # gather the token-based features for the given tweet
@@ -267,7 +277,7 @@ def document_features(tweet, features): # tweet is list of tokens
     document_words = set(tweet)
     for word in tFeats:
         features['contains(%s)' % word] = (word in document_words)
-    return features    
+    return features
 
 # prepare and return the training set for TRAINING_DATE
 def prepDay():
