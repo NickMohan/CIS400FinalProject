@@ -67,6 +67,7 @@ def processPriceData():
 
 # builds and returns a set of the top 2000 tokens for DATE
 def makeTokenFeatureSet():
+    print('CREATING TOKEN FEATURE SET...\n')
     total = []
     for i in range(24):
         print('Tokenizing hour ' + str(i) + ':\n')
@@ -74,6 +75,7 @@ def makeTokenFeatureSet():
         print('Done\n')
     tdist = FreqDist(total)
     token_features = [w for (w, c) in tdist.most_common(2000)]
+    print('TOKEN FEATURE SET COMPLETED\n')
     return token_features
 
 # some helpful stuff we need to load in for tokenization
@@ -153,15 +155,19 @@ def prepHour(day,hour):
     chCategory = "C3"
     dayEntries = newbtc.loc[(newbtc['day'] == day)].reset_index()
     chChange = dayEntries.at[int(hour), 'change']
-    if (hour == "0"):
-        prevChange = newbtc.at[int(dayEntries.at[0,'index']) - 1, 'change']
-        prevVol = newbtc.at[int(dayEntries.at[0,'volume']) - 1, 'change']
-    else :
-        prevChange = dayEntries.at[int(hour) - 1, 'change']
-        prevVol = dayEntries.at[int(hour) - 1, 'volume']
+    try:
+        if (hour == "0"):
+            prevChange = newbtc.at[int(dayEntries.at[0,'index']) - 1, 'change']
+            prevVol = newbtc.at[int(dayEntries.at[0,'volume']) - 1, 'change']
+        else :
+            prevChange = dayEntries.at[int(hour) - 1, 'change']
+            prevVol = dayEntries.at[int(hour) - 1, 'volume']
+    except:
+        prevChange = 0
+        prevVol = dayEntries.at[int(hour), 'volume']
 
-    print(prevChange)
-    print(prevVol)
+    # print(prevChange)
+    # print(prevVol)
 
     ## CATEGORIZE PREVIOUS HOUR CHANGE ##
     if(prevChange > 1):
@@ -186,9 +192,9 @@ def prepHour(day,hour):
         chCategory = "C5"
 
     ## CATEGORIZE VOLUME LEVEL ##
-    if(vFeat > 1000):
+    if(prevVol > 1000):
         vFeat = "high"
-    elif(vFeat > 500):
+    elif(prevVol > 500):
         vFeat = "medium"
     print('Done.')
 
@@ -217,12 +223,12 @@ def prepHour(day,hour):
         # add fully compiled feature set for tweet to day's accumulator
         compiled_hour.extend((features,chCategory))
     print('Done.')
+    return compiled_hour
 
 # compile token-based features for the given tweet t, and 
 # add it to the current feature set (features)
 tFeats = makeTokenFeatureSet()
 def compileTweetTokenFeats(t, features):
-    print('hello')
     tt = TweetTokenizer(t)
     tokens = tt.tokenize(t)
 
@@ -291,3 +297,5 @@ def training():
     print('Accuracy:')
     print(classy.accuracy(classifier, test_set))
     print(classifier.show_most_informative_features(200))
+
+training()
