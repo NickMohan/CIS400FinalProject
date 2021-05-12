@@ -1,3 +1,7 @@
+# C:\Users\nbfen\Downloads\dataset_2021-05-02\storage\2021-04-22_Bitcoin
+
+#CIS400 - Social Media and Data Mining Final Project
+
 import twitter
 from helperFuncs import *
 import json
@@ -33,7 +37,6 @@ CURR_SHORT = "btc"
 # NAME OF CURRENCY (Bitcoin, Ethereum, Dogecoin)
 CURRENCY = 'Bitcoin'
 
-spell = Speller(fast=True)
 
 ## CLASSES ##
 # C1 - > 1%
@@ -109,10 +112,27 @@ def tokenFeaturesHour(day,hour):
     filtered_tokens = []
     temp_tokens = []
     word = set(words.words())
+    spell = Speller(fast=True)
+
+    for token in tokens:
+        #removing hyperlinks
+        token = re.sub('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+#]|[!*\(\),]|' \
+                       '(?:%[0-9a-fA-F][0-9a-fA-F]))+','', token)
+        #token = re.sub("(@[A-Za-z0-9_]+)","", token)
+
+        if token.lower() not in stop_words and token.lower() not in string.punctuation:
+            temp_tokens.append(token)
+            #filtered_tokens.append(token)
 
     for token in temp_tokens:
         if len(token) >2:
-            if token.lower() in word or token in emoji.UNICODE_EMOJI_ENGLISH or token.startswith('@') or token.startswith('#'):
+            if token.startswith('@'):
+                filtered_tokens.append(token)
+            elif token.startswith('#'):
+                filtered_tokens.append(token)
+            elif token.lower() in word:
+                filtered_tokens.append(token)
+            elif token in emoji.UNICODE_EMOJI_ENGLISH:
                 filtered_tokens.append(token)
             elif (spell(token)) in word:
                 filtered_tokens.append(spell(token))
@@ -146,6 +166,9 @@ def tokenFeaturesHour(day,hour):
 
 newbtc = processPriceData()
 def prepHour(day,hour):
+    ts = time.time()
+    print('Start of hour: ')
+    print(ts)
     tw = pd.read_pickle('{2}{0}_{3}\\{0}_{1}_{3}_tweets.p'.format(day,hour,TWEET_PATH, CURRENCY))
     #print(len(tw))
     compiled_hour = []
@@ -226,7 +249,11 @@ def prepHour(day,hour):
 
         # add fully compiled feature set for tweet to day's accumulator
         compiled_hour.extend((features,chCategory))
+
+    ts = time.time()
     print('Done.')
+    print('End of hour: ')
+    print(ts)
     return compiled_hour
 
 # compile token-based features for the given tweet t, and
@@ -240,10 +267,27 @@ def compileTweetTokenFeats(t, features):
     filtered_tokens = []
     temp_tokens = []
     word = set(words.words())
+    spell = Speller(fast=True)
+
+    for token in tokens:
+        #removing hyperlinks
+        token = re.sub('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+#]|[!*\(\),]|' \
+                       '(?:%[0-9a-fA-F][0-9a-fA-F]))+','', token)
+        #token = re.sub("(@[A-Za-z0-9_]+)","", token)
+
+        if token.lower() not in stop_words and token.lower() not in string.punctuation:
+            temp_tokens.append(token)
+            #filtered_tokens.append(token)
 
     for token in temp_tokens:
         if len(token) >2:
-            if token.lower() in word or token in emoji.UNICODE_EMOJI_ENGLISH or token.startswith('@') or token.startswith('#'):
+            if token.startswith('@'):
+                filtered_tokens.append(token)
+            elif token.startswith('#'):
+                filtered_tokens.append(token)
+            elif token.lower() in word:
+                filtered_tokens.append(token)
+            elif token in emoji.UNICODE_EMOJI_ENGLISH:
                 filtered_tokens.append(token)
             elif (spell(token)) in word:
                 filtered_tokens.append(spell(token))
