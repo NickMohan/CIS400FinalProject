@@ -125,7 +125,7 @@ def tokenFeaturesHour(day,hour):
             #filtered_tokens.append(token)
 
     for token in temp_tokens:
-        #if len(token) >2:
+        if len(token) >2 or token in emoji.UNICODE_EMOJI_ENGLISH:
             if token.startswith('@'):
                 filtered_tokens.append(token)
             elif token.startswith('#'):
@@ -280,7 +280,7 @@ def compileTweetTokenFeats(t, features):
             #filtered_tokens.append(token)
 
     for token in temp_tokens:
-        #if len(token) >2:
+        if len(token) >2 or token in emoji.UNICODE_EMOJI_ENGLISH:
             if token.startswith('@'):
                 filtered_tokens.append(token)
             elif token.startswith('#'):
