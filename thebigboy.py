@@ -350,6 +350,8 @@ def prepDay():
         print('COMPLETED HOUR ' + str(i) + '\n')
     print('TRAINING SET CREATION COMPLETED')
     
+    new_dict = defaultdict(list)
+    
     #csv file generator
     for i in day_compiled:
         keyVals = []
