@@ -127,20 +127,17 @@ def tokenFeaturesHour(day,hour):
         #token = re.sub("(@[A-Za-z0-9_]+)","", token)
 
         if token.lower() not in stop_words and token.lower() not in string.punctuation:
-            temp_tokens.append(token)
-            #filtered_tokens.append(token)
-    for token in temp_tokens:
-        if len(token) >2:
-            if token.startswith('@'):
-                filtered_tokens.append(token)
-            elif token.startswith('#'):
-                filtered_tokens.append(token)
-            elif token.lower() in word:
-                filtered_tokens.append(token)
-            elif token in emoji.UNICODE_EMOJI_ENGLISH:
-                filtered_tokens.append(token)
-            elif (spell(token)) in word:
-                filtered_tokens.append(spell(token))
+            if len(token) >2 or token in emoji.UNICODE_EMOJI_ENGLISH:
+                if token.startswith('@'):
+                    filtered_tokens.append(token)
+                elif token.startswith('#'):
+                    filtered_tokens.append(token)
+                elif token.lower() in word:
+                    filtered_tokens.append(token)
+                elif token in emoji.UNICODE_EMOJI_ENGLISH:
+                    filtered_tokens.append(token)
+                else:
+                    filtered_tokens.append(spell(token))
     document = nlp(' '.join(filtered_tokens))
     # remove named entities
     text_no_namedentities = []
@@ -301,21 +298,17 @@ def compileTweetTokenFeats(t, f):
         #token = re.sub("(@[A-Za-z0-9_]+)","", token)
 
         if token.lower() not in stop_words and token.lower() not in string.punctuation:
-            temp_tokens.append(token)
-            #filtered_tokens.append(token)
-
-    for token in temp_tokens:
-        if len(token) >2:
-            if token.startswith('@'):
-                filtered_tokens.append(token)
-            elif token.startswith('#'):
-                filtered_tokens.append(token)
-            elif token.lower() in word:
-                filtered_tokens.append(token)
-            elif token in emoji.UNICODE_EMOJI_ENGLISH:
-                filtered_tokens.append(token)
-            elif (spell(token)) in word:
-                filtered_tokens.append(spell(token))
+            if len(token) >2 or token in emoji.UNICODE_EMOJI_ENGLISH:
+                if token.startswith('@'):
+                    filtered_tokens.append(token)
+                elif token.startswith('#'):
+                    filtered_tokens.append(token)
+                elif token.lower() in word:
+                    filtered_tokens.append(token)
+                elif token in emoji.UNICODE_EMOJI_ENGLISH:
+                    filtered_tokens.append(token)
+                else:
+                    filtered_tokens.append(spell(token))
     document = nlp(' '.join(filtered_tokens))
     text_no_namedentities = []
     # remove named entities
@@ -357,6 +350,22 @@ def prepDay():
         day_compiled.extend(prepHour(TRAINING_DATE,str(i)))
         print('COMPLETED HOUR ' + str(i) + '\n')
     print('TRAINING SET CREATION COMPLETED')
+    
+    #csv file generator
+    for i in day_compiled:
+        keyVals = []
+        for key in i[0].keys():
+            keyVals.append(i[0][key])
+        for val,x in zip(keyVals,i[0].keys()):
+            new_dict[x].append(val)
+        keyVals.append(i[1])
+        cat = len(keyVals) - 1
+        new_dict['category'].append(keyVals[cat])
+
+
+    df = pd.DataFrame(new_dict)
+    df.to_csv(CURRENCY + '-' + TRAINING_DATE + '.csv',index=False, header=True)
+    
     return day_compiled
 
 # prepHour(TRAINING_DATE,"0")
