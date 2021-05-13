@@ -117,7 +117,6 @@ def tokenFeaturesHour(day,hour):
     #document = nlp(' '.join(filtered_tokens))
 
     filtered_tokens = []
-    temp_tokens = []
     word = set(words.words())
     spell = Speller(fast=True)
 
@@ -288,7 +287,6 @@ def compileTweetTokenFeats(t, f):
 
     # remove stopwords and punctuation
     filtered_tokens = []
-    temp_tokens = []
     word = set(words.words())
     spell = Speller(fast=True)
 
