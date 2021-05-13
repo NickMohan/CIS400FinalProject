@@ -21,6 +21,7 @@ import spacy
 from random import sample
 from autocorrect import Speller
 import emoji
+from collections import defaultdict
 #import en_core_web_sm
 #nlp = en_core_web_sm.load()
 
