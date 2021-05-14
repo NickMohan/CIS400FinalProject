@@ -21,7 +21,7 @@ import spacy
 from random import sample
 from autocorrect import Speller
 import emoji
-from collections import defaultdict
+from textblob import TextBlob
 #import en_core_web_sm
 #nlp = en_core_web_sm.load()
 
@@ -77,7 +77,7 @@ def makeTokenFeatureSet():
         total.extend(tokenFeaturesHour(DATE,i))
         print('Done\n')
     tdist = FreqDist(total)
-    token_features = [w for (w, c) in tdist.most_common(2000)]
+    token_features = [w for (w, c) in tdist.most_common(500)]
     print('TOKEN FEATURE SET COMPLETED\n')
     return token_features
 
@@ -117,6 +117,7 @@ def tokenFeaturesHour(day,hour):
     #document = nlp(' '.join(filtered_tokens))
 
     filtered_tokens = []
+    # temp_tokens = []
     word = set(words.words())
     spell = Speller(fast=True)
 
@@ -127,7 +128,10 @@ def tokenFeaturesHour(day,hour):
         #token = re.sub("(@[A-Za-z0-9_]+)","", token)
 
         if token.lower() not in stop_words and token.lower() not in string.punctuation:
-            if len(token) >2 or token in emoji.UNICODE_EMOJI_ENGLISH:
+            # temp_tokens.append(token)
+            #filtered_tokens.append(token)
+
+            if len(token) >2:
                 if token.startswith('@'):
                     filtered_tokens.append(token)
                 elif token.startswith('#'):
@@ -136,7 +140,7 @@ def tokenFeaturesHour(day,hour):
                     filtered_tokens.append(token)
                 elif token in emoji.UNICODE_EMOJI_ENGLISH:
                     filtered_tokens.append(token)
-                else:
+                elif (spell(token)) in word:
                     filtered_tokens.append(spell(token))
     document = nlp(' '.join(filtered_tokens))
     # remove named entities
@@ -287,8 +291,14 @@ def compileTweetTokenFeats(t, f):
 
     # remove stopwords and punctuation
     filtered_tokens = []
+    # temp_tokens = []
     word = set(words.words())
     spell = Speller(fast=True)
+
+    emojiFeat = False
+    multEmojiFeat = False
+    tagFeat = False
+    elonTag = False
 
     for token in tokens:
         #removing hyperlinks
@@ -297,17 +307,29 @@ def compileTweetTokenFeats(t, f):
         #token = re.sub("(@[A-Za-z0-9_]+)","", token)
 
         if token.lower() not in stop_words and token.lower() not in string.punctuation:
-            if len(token) >2 or token in emoji.UNICODE_EMOJI_ENGLISH:
+            # temp_tokens.append(token)
+            #filtered_tokens.append(token)
+            if token.lower() == '@elonmusk':
+                elonTag = True
+            if len(token) >2:
                 if token.startswith('@'):
                     filtered_tokens.append(token)
+                    tagFeat = True
                 elif token.startswith('#'):
                     filtered_tokens.append(token)
                 elif token.lower() in word:
                     filtered_tokens.append(token)
                 elif token in emoji.UNICODE_EMOJI_ENGLISH:
                     filtered_tokens.append(token)
-                else:
+                    if emojiFeat:
+                        multEmojiFeat = True
+                    else:
+                        emojiFeat = True
+                elif (spell(token)) in word:
                     filtered_tokens.append(spell(token))
+
+    
+        
     document = nlp(' '.join(filtered_tokens))
     text_no_namedentities = []
     # remove named entities
@@ -318,9 +340,29 @@ def compileTweetTokenFeats(t, f):
         else:
             text_no_namedentities.append(item.text)
 
+    sent = "neutral"
+    sentiFeat = 0
+    for t in text_no_namedentities:
+        temp = TextBlob(t)
+        pol = temp.sentiment.polarity
+        if (pol < -.3):
+            sentiFeat -= 1
+        elif (pol > .3):
+            sentiFeat += 1
+    if(sentiFeat > 3):
+        sent = "positive"
+    elif(sentiFeat < -3):
+        sent = "negative"
+
+
     # todo - further tokenization
 
     features = document_features(text_no_namedentities, features)
+    features['emojiHere'] = emojiFeat
+    features['multEmojiHere'] = multEmojiFeat
+    features['tagsHere'] = tagFeat
+    features['elonTagHere'] = elonTag
+    features['tweetSentiment'] = sent
 
     # todo - fill in other token based features
     # pos/neg classifier
@@ -337,6 +379,7 @@ def document_features(tweet, f): # tweet is list of tokens
     features = f
     document_words = set(tweet)
     for word in tFeats:
+        a = 1+1
         features['contains(%s)' % word] = (word in document_words)
     return features    
 
@@ -349,9 +392,9 @@ def prepDay():
         day_compiled.extend(prepHour(TRAINING_DATE,str(i)))
         print('COMPLETED HOUR ' + str(i) + '\n')
     print('TRAINING SET CREATION COMPLETED')
-    
+
     new_dict = defaultdict(list)
-    
+
     #csv file generator
     for i in day_compiled:
         keyVals = []
@@ -362,11 +405,10 @@ def prepDay():
         keyVals.append(i[1])
         cat = len(keyVals) - 1
         new_dict['category'].append(keyVals[cat])
-
-
     df = pd.DataFrame(new_dict)
     df.to_csv(CURRENCY + '-' + TRAINING_DATE + '.csv',index=False, header=True)
     
+
     return day_compiled
 
 # prepHour(TRAINING_DATE,"0")
