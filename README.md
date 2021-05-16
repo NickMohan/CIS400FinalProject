@@ -3,9 +3,13 @@ CIS400 Social Media and Data Mining FinalProject
 
 # Main Files
 bayesV4.py - Final Build of the Bayes Naive Classifier
+
 finalProject.py - Tweet Data Collector
+
 pricegrabba.py - Price Data Collector
+
 crypto.zip - Compiled Price Data
+
 dataset_2021-05-02.zip - Compiled Tweet Data
 
 # How to Run The Final Bayes Build
